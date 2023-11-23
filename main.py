@@ -2,42 +2,59 @@ import serial
 import time
 import pyautogui
 import re
+import serial.tools.list_ports
 
-ser = serial.Serial("COM6", 9600)
-time.sleep(1)
+# Function to find the COM port based on device name
+def find_device_port(device_name):
+    ports = list(serial.tools.list_ports.comports())
+    for port in ports:
+        if device_name in port.description:     
+            return port.device
+    return None
 
-print("Forward to start, Backward to end.")
+# Specify your device name
+device_name = "Arduino Uno"
 
-while 1:
+# Find the COM port dynamically
 
-    start = str(ser.readline())
-    start = re.sub(r'^b\'(.*)\\r\\n\'$', r'\1', start)
+com_port = find_device_port(device_name)
 
-    if start == "Forward":
-        print(start, " Execution is started.")
+if com_port is None:
+    print(f"Device '{device_name}' not found. Check the connection.")
+else:
+    ser = serial.Serial(com_port, 9600)
+    time.sleep(1)
 
-    while start == "Forward":
+    print("Forward to start, Backward to end.")
 
-        incoming = str(ser.readline())
-        incoming = re.sub(r'^b\'(.*)\\r\\n\'$', r'\1', incoming)
-        print(incoming)
+    while True:
+        start = str(ser.readline())
+        start = re.sub(r'^b\'(.*)\\r\\n\'$', r'\1', start)
 
-        if incoming == 'Left':
-            pyautogui.press('left')
-        if incoming == 'Right':
-            pyautogui.press('right')
-        if incoming == 'Clockwise':
-            pyautogui.press('volumeup')
-        if incoming == 'anti-clockwise':
-            pyautogui.press('volumedown')
-        if incoming == 'Up':
-            pyautogui.press('playpause')
-        if incoming == 'Down':
-            pyautogui.press('volumemute')
-        if 'Backward' in incoming:
-            print("Excution stopped")
-            break
+        if start == "Forward":
+            print(start, " Execution is started.")
 
-        incoming = ""
+        while start == "Forward":
+            incoming = str(ser.readline())
+            incoming = re.sub(r'^b\'(.*)\\r\\n\'$', r'\1', incoming)
+            print(incoming)
 
-ser.close()
+            if incoming == 'Left':
+                pyautogui.press('left')
+            if incoming == 'Right':
+                pyautogui.press('right')
+            if incoming == 'Clockwise':
+                pyautogui.press('volumeup')
+            if incoming == 'anti-clockwise':
+                pyautogui.press('volumedown')
+            if incoming == 'Up':
+                pyautogui.press('playpause')
+            if incoming == 'Down':
+                pyautogui.press('volumemute')
+            if 'Backward' in incoming:
+                print("Execution stopped")
+                break
+
+            incoming = ""
+
+    ser.close()
